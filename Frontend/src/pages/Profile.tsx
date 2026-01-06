@@ -16,10 +16,10 @@ const Profile = () => {
     const fetchProfile = async () => {
       try {
         const response = await getProfile();
-        setUser(response.user); // 👈 from MongoDB
+        setUser(response); // ✅ FIXED
       } catch (error) {
         console.error("Failed to fetch profile", error);
-        navigate("/login"); // token invalid or expired
+        navigate("/login");
       } finally {
         setLoading(false);
       }
@@ -27,6 +27,7 @@ const Profile = () => {
 
     fetchProfile();
   }, [navigate]);
+
 
   const handleLogout = () => {
     localStorage.removeItem("token");
