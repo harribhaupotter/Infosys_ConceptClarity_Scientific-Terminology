@@ -5,7 +5,6 @@ from app.auth import hash_password, verify_password, create_token
 from app.dependencies import get_current_user
 from fastapi.middleware.cors import CORSMiddleware
 
-
 app = FastAPI()
 
 app.add_middleware(
@@ -52,7 +51,27 @@ def profile(user=Depends(get_current_user)):
 
 @app.post("/explain")
 def explain(data: ExplainRequest, user=Depends(get_current_user)):
+    users_collection.update_one(
+        {"email": user["email"]},
+        {"$push": {"search_history": {"$each": [data.term], "$slice": -5}}}
+    )
+
     return {
         "term": data.term,
         "explanation": f"This is a simplified explanation of {data.term}."
     }
+
+
+@app.get("/user/search-history")
+def get_history(user=Depends(get_current_user)):
+    db_user = users_collection.find_one({"email": user["email"]})
+    return db_user.get("search_history", [])
+
+@app.post("/explain/guest")
+def explain_guest(data: ExplainRequest):
+    return {
+        "term": data.term,
+        "explanation": f"This is a simplified explanation of {data.term}."
+    }
+
+

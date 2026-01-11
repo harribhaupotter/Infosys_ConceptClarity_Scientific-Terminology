@@ -1,30 +1,68 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { explainTerm } from "../services/searchService";
+import { explainTerm, getSearchHistory } from "../services/searchService";
+
 
 const Home = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [explanation, setExplanation] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const [history, setHistory] = useState<string[]>([]);
+  const token = localStorage.getItem("token");
+  useEffect(() => {
+    const loadHistory = async () => {
+      if (!token) return;
 
+      try {
+        const data = await getSearchHistory();
+        setHistory(data);
+      } catch (err) {
+        console.error("Failed to load history");
+      }
+    };
+
+    loadHistory();
+  }, [token]);
+ 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!searchTerm.trim()) return;
+
+    // Check if guest already used (from localStorage)
+    const guestUsedInStorage = localStorage.getItem("guest_used") === "true";
+    if (!token && guestUsedInStorage) {
+      alert("Please login or signup to continue using the service.");
+      return;
+    }
 
     setIsLoading(true);
     setExplanation("");
 
     try {
-      const response = await explainTerm(searchTerm);
-      setExplanation(response.explanation);
+      let response;
+
+      // Logged-in user
+      if (token) {
+        response = await explainTerm(searchTerm);
+        setExplanation(response.explanation);
+
+        // Refresh history from backend after search
+        const updated = await getSearchHistory();
+        setHistory(updated);
+      } else {
+        // Guest user – first time only
+        response = await explainTerm(searchTerm, true);
+        localStorage.setItem("guest_used", "true");
+        setExplanation(response.explanation);
+      }
     } catch (error) {
       setExplanation("Sorry, an error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
+
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -37,18 +75,37 @@ const Home = () => {
       <header className="flex justify-between items-center p-6">
         <div></div>
         <div className="flex items-center gap-6">
-          <button
-            onClick={() => navigate("/profile")}
-            className="text-xl text-gray-300 hover:text-gray-100 font-semibold px-4 py-2 hover:underline"
-          >
-            Profile
-          </button>
-          <button
-            onClick={handleLogout}
-            className="text-xl text-gray-300 hover:text-gray-100 font-semibold px-4 py-2 hover:underline"
-          >
-            Logout
-          </button>
+          {token ? (
+            <>
+              <button
+                onClick={() => navigate("/profile")}
+                className="text-xl text-gray-300 hover:text-gray-100 font-semibold px-4 py-2 hover:underline"
+              >
+                Profile
+              </button>
+              <button
+                onClick={handleLogout}
+                className="text-xl text-gray-300 hover:text-gray-100 font-semibold px-4 py-2 hover:underline"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => navigate("/login")}
+                className="text-xl text-gray-300 hover:text-gray-100 font-semibold px-4 py-2 hover:underline"
+              >
+                Login
+              </button>
+              <button
+                onClick={() => navigate("/signup")}
+                className="text-xl text-gray-300 hover:text-gray-100 font-semibold px-4 py-2 hover:underline"
+              >
+                Signup
+              </button>
+            </>
+          )}
         </div>
       </header>
 
@@ -76,6 +133,23 @@ const Home = () => {
                 placeholder="Enter a scientific term to explain..."
                 autoFocus
               />
+              {history.length > 0 && (
+                <div className="mt-3 bg-gray-900 border border-gray-700 rounded-xl p-3">
+                  <p className="text-sm text-gray-400 mb-2">Recent searches</p>
+                  <div className="flex flex-wrap gap-2">
+                    {history.map((term) => (
+                      <button
+                        key={term}
+                        type="button"
+                        onClick={() => setSearchTerm(term)}
+                        className="px-3 py-1 text-sm bg-gray-800 text-gray-200 rounded-full hover:bg-gray-700"
+                      >
+                        {term}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex justify-center mt-8">
               <button
