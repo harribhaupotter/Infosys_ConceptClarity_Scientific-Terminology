@@ -9,6 +9,7 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const [history, setHistory] = useState<string[]>([]);
+  const [guestQueryCount, setGuestQueryCount] = useState(0);
   const token = localStorage.getItem("token");
   useEffect(() => {
     const loadHistory = async () => {
@@ -29,9 +30,8 @@ const Home = () => {
     e.preventDefault();
     if (!searchTerm.trim()) return;
 
-    // Check if guest already used (from localStorage)
-    const guestUsedInStorage = localStorage.getItem("guest_used") === "true";
-    if (!token && guestUsedInStorage) {
+    // Check if guest is trying to query for the second time
+    if (!token && guestQueryCount >= 1) {
       alert("Please login or signup to continue using the service.");
       return;
     }
@@ -51,10 +51,11 @@ const Home = () => {
         const updated = await getSearchHistory();
         setHistory(updated);
       } else {
-        // Guest user – first time only
+        // Guest user – allow first query, then increment count after successful response
         response = await explainTerm(searchTerm, true);
-        localStorage.setItem("guest_used", "true");
         setExplanation(response.explanation);
+        // Increment guest query count after successful query completion
+        setGuestQueryCount(1);
       }
     } catch (error) {
       setExplanation("Sorry, an error occurred. Please try again.");
