@@ -4,7 +4,9 @@ from app.schemas import SignupRequest, LoginRequest, ExplainRequest
 from app.auth import hash_password, verify_password, create_token
 from app.dependencies import get_current_user
 from fastapi.middleware.cors import CORSMiddleware
+import requests
 
+COLAB_LLM_URL = "https://unattacked-rayden-wheezingly.ngrok-free.dev/generate"
 app = FastAPI()
 
 app.add_middleware(
@@ -51,15 +53,19 @@ def profile(user=Depends(get_current_user)):
 
 @app.post("/explain")
 def explain(data: ExplainRequest, user=Depends(get_current_user)):
+    response = requests.post(
+        COLAB_LLM_URL,
+        json={"term": data.term},
+        timeout=60
+    )
+    response.raise_for_status()
+
     users_collection.update_one(
         {"email": user["email"]},
         {"$push": {"search_history": {"$each": [data.term], "$slice": -5}}}
     )
 
-    return {
-        "term": data.term,
-        "explanation": f"This is a simplified explanation of {data.term}."
-    }
+    return response.json()
 
 
 @app.get("/user/search-history")
@@ -69,9 +75,12 @@ def get_history(user=Depends(get_current_user)):
 
 @app.post("/explain/guest")
 def explain_guest(data: ExplainRequest):
-    return {
-        "term": data.term,
-        "explanation": f"This is a simplified explanation of {data.term}."
-    }
+    response = requests.post(
+        COLAB_LLM_URL,
+        json={"term": data.term},
+        timeout=60
+    )
+    response.raise_for_status()
+    return response.json()
 
 
