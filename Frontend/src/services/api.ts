@@ -21,8 +21,14 @@ export async function apiRequest(
   });
 
   if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.detail || "Something went wrong");
+    let errorMessage = "Something went wrong";
+    try {
+      const err = await res.json();
+      errorMessage = err.detail || err.message || errorMessage;
+    } catch (e) {
+      errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+    }
+    throw new Error(errorMessage);
   }
 
   return res.json();
