@@ -87,7 +87,7 @@ const Home = () => {
       if (token) {
         response = await explainTerm(searchTerm, false, level, language);
         setFullResponse(response);
-        setExplanation(response.explanation);
+        setExplanation(response?.explanation || "");
 
         // Refresh history from backend after search
         const updated = await getSearchHistory();
@@ -95,12 +95,23 @@ const Home = () => {
       } else {
         // Guest user – allow first query, then increment count after successful response
         response = await explainTerm(searchTerm, true, level, language);
-        setFullResponse(response);
-        setExplanation(response.explanation);
+        console.log("Guest response:", response); // Debug log
+        
+        // Check if response has an error field
+        if (response?.error) {
+          setExplanation(`Error: ${response.error}`);
+          setFullResponse(response);
+        } else {
+          setFullResponse(response);
+          const explanationText = response?.explanation || "";
+          console.log("Explanation text:", explanationText); // Debug log
+          setExplanation(explanationText);
+        }
         // Increment guest query count after successful query completion
         setGuestQueryCount(1);
       }
     } catch (error) {
+      console.error("Error in handleSearch:", error); // Debug log
       setExplanation("Sorry, an error occurred. Please try again.");
       setFullResponse(null);
     } finally {
@@ -131,7 +142,7 @@ const Home = () => {
       if (token) {
         response = await explainTerm(term, false, level, language);
         setFullResponse(response);
-        setExplanation(response.explanation);
+        setExplanation(response?.explanation || "");
 
         // Refresh history from backend after search
         const updated = await getSearchHistory();
@@ -139,12 +150,23 @@ const Home = () => {
       } else {
         // Guest user – allow first query, then increment count after successful response
         response = await explainTerm(term, true, level, language);
-        setFullResponse(response);
-        setExplanation(response.explanation);
+        console.log("Guest response (related term):", response); // Debug log
+        
+        // Check if response has an error field
+        if (response?.error) {
+          setExplanation(`Error: ${response.error}`);
+          setFullResponse(response);
+        } else {
+          setFullResponse(response);
+          const explanationText = response?.explanation || "";
+          console.log("Explanation text (related term):", explanationText); // Debug log
+          setExplanation(explanationText);
+        }
         // Increment guest query count after successful query completion
         setGuestQueryCount(1);
       }
     } catch (error) {
+      console.error("Error in handleRelatedTermClick:", error); // Debug log
       setExplanation("Sorry, an error occurred. Please try again.");
       setFullResponse(null);
     } finally {
@@ -480,7 +502,7 @@ const Home = () => {
           </form>
 
           {/* Explanation Output */}
-          {explanation && (
+          {(explanation || fullResponse) && (
             <>
               <div className="mt-12 p-10 bg-gray-900 rounded-2xl border border-gray-800 shadow-large">
                 <div className="flex justify-between items-center mb-6">
@@ -585,7 +607,7 @@ const Home = () => {
                   </pre>
                 ) : (
                   <p className="text-lg text-gray-300 leading-relaxed whitespace-pre-wrap">
-                    {explanation}
+                    {explanation || (fullResponse ? "No explanation available. Please check the JSON view for details." : "")}
                   </p>
                 )}
               </div>
