@@ -15,7 +15,7 @@ const Login = () => {
 
 
     try {
-      const response = await login(email, password);
+      await login(email, password);
       // Decode token to check role and redirect accordingly
       const token = localStorage.getItem("token");
       if (token) {

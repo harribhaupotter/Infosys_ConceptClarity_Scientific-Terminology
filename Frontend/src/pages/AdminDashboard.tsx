@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAllUsers, getAllFeedback, type AdminUser, type FeedbackItem } from "../services/adminService";
 import { isAdmin } from "../utils/jwt";
+import SummaryCards from "../components/SummaryCards";
+import TopSearchedTermsBarChart from "../components/TopSearchedTermsBarChart";
+import FeedbackDistributionPieChart from "../components/FeedbackDistributionPieChart";
+import UserActivityChart from "../components/UserActivityChart";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -119,6 +123,19 @@ const AdminDashboard = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-10">
+        {/* Summary Statistics Cards */}
+        <SummaryCards users={users} allFeedback={allFeedback} />
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+          <TopSearchedTermsBarChart users={users} />
+          <FeedbackDistributionPieChart allFeedback={allFeedback} />
+        </div>
+
+        <div className="mb-10">
+          <UserActivityChart users={users} />
+        </div>
+
         {/* All Feedback Section */}
         <div className="bg-gray-900 rounded-2xl shadow-large p-10 border border-gray-800 mb-10">
           <div className="flex justify-between items-center mb-8">
