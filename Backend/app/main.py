@@ -68,7 +68,7 @@ def explain(data: ExplainRequest, user=Depends(get_current_user)):
               "level": data.level,
               "language": data.language
               },
-        timeout=60
+        timeout=120
     )
     response.raise_for_status()
 
@@ -136,7 +136,7 @@ def explain_guest(data: ExplainRequest):
               "level": data.level,
               "language": data.language
               },
-        timeout=60
+        timeout=120
     )
     response.raise_for_status()
     result = response.json()
