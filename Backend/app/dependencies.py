@@ -15,3 +15,8 @@ def get_current_user(token=Depends(security)):
         return payload
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+def admin_only(user=Depends(get_current_user)):
+    if user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user

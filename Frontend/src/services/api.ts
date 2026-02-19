@@ -1,4 +1,4 @@
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "http://localhost:8000";
 
 export async function apiRequest(
   endpoint: string,
@@ -21,8 +21,14 @@ export async function apiRequest(
   });
 
   if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.detail || "Something went wrong");
+    let errorMessage = "Something went wrong";
+    try {
+      const err = await res.json();
+      errorMessage = err.detail || err.message || errorMessage;
+    } catch (e) {
+      errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+    }
+    throw new Error(errorMessage);
   }
 
   return res.json();
