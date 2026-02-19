@@ -8,9 +8,10 @@ import requests
 from datetime import datetime
 from collections import defaultdict
 from collections import defaultdict
+import os
 #this is for the colab
 # LLM_URL = "https://unattacked-rayden-wheezingly.ngrok-free.dev/generate"
-LLM_URL = "http://127.0.0.1:8001/generate"
+LLM_URL = os.environ.get("LLM_URL", "http://127.0.0.1:8001/generate")
 app = FastAPI()
 
 app.add_middleware(
